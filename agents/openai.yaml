@@ -1,0 +1,4 @@
+interface:
+  display_name: "作业润色 skill"
+  short_description: "从代码、实验、证据、报告到提交的一体化课程作业润色流程"
+  default_prompt: "Use $assignment-polishing to audit and improve this coursework from requirements through code, evidence, report, presentation, and final submission."
