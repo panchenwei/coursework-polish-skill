@@ -32,8 +32,10 @@
 推荐使用一次性联合安装器。它会覆盖部署 `assignment-polishing` 前先备份旧版本；如果本地已有 FigGenie 则直接复用，否则从其官方仓库安装：
 
 ```powershell
-python scripts/install_skill.py
+python scripts/install_skill.py --install-figgenie-deps
 ```
+
+该选项安装 FigGenie 的 Python 依赖；Windows 上若已有 Chrome 或 Edge，会配置 `FIGGENIE_CHROMIUM` 使用系统浏览器，避免额外下载 Playwright Chromium。
 
 离线安装且本机已经有 FigGenie：
 

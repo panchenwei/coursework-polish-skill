@@ -9,6 +9,7 @@ import json
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
@@ -31,6 +32,66 @@ def figgenie_dependency_status() -> dict[str, object]:
         "missing_required_python_packages": missing_required,
         "missing_optional_python_packages": missing_optional,
         "chromium_note": "Run 'playwright install chromium' if FigGenie rendering reports no browser.",
+    }
+
+
+def find_system_chromium() -> Path | None:
+    configured = os.environ.get("FIGGENIE_CHROMIUM")
+    if configured and Path(configured).is_file():
+        return Path(configured)
+    candidates = []
+    if os.name == "nt":
+        candidates = [
+            Path(r"C:\Program Files\Google\Chrome\Application\chrome.exe"),
+            Path(r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe"),
+            Path(r"C:\Program Files\Microsoft\Edge\Application\msedge.exe"),
+            Path(r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"),
+        ]
+    elif sys.platform == "darwin":
+        candidates = [
+            Path("/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+            Path("/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge"),
+        ]
+    else:
+        for executable in ("google-chrome", "chromium", "chromium-browser", "microsoft-edge"):
+            found = shutil.which(executable)
+            if found:
+                candidates.append(Path(found))
+    return next((path for path in candidates if path.is_file()), None)
+
+
+def configure_figgenie_browser() -> dict[str, str | None]:
+    browser = find_system_chromium()
+    if browser is None:
+        return {
+            "status": "not-found",
+            "path": None,
+            "next_action": "Run 'python -m playwright install chromium'.",
+        }
+    os.environ["FIGGENIE_CHROMIUM"] = str(browser)
+    if os.name == "nt":
+        import winreg
+
+        with winreg.CreateKey(winreg.HKEY_CURRENT_USER, "Environment") as key:
+            winreg.SetValueEx(
+                key, "FIGGENIE_CHROMIUM", 0, winreg.REG_SZ, str(browser)
+            )
+        status = "configured-user-environment"
+    else:
+        status = "available-for-current-process"
+    return {"status": status, "path": str(browser), "next_action": None}
+
+
+def install_figgenie_dependencies() -> dict[str, object]:
+    packages = ["lxml", "pillow", "playwright", "fonttools", "python-pptx"]
+    subprocess.run(
+        [sys.executable, "-m", "pip", "install", *packages],
+        check=True,
+    )
+    return {
+        "python_packages": "installed",
+        "browser": configure_figgenie_browser(),
+        "status": figgenie_dependency_status(),
     }
 
 
@@ -139,6 +200,11 @@ def main() -> int:
     parser.add_argument("--offline", action="store_true")
     parser.add_argument("--no-backup", action="store_true")
     parser.add_argument("--refresh-figgenie", action="store_true")
+    parser.add_argument(
+        "--install-figgenie-deps",
+        action="store_true",
+        help="Install FigGenie Python dependencies and configure an existing system browser when possible",
+    )
     args = parser.parse_args()
 
     repo_root = Path(__file__).resolve().parent.parent
@@ -160,6 +226,8 @@ def main() -> int:
                 repo_root, skills_root, args.offline, args.refresh_figgenie
             )
             figgenie_result["dependencies"] = figgenie_dependency_status()
+            if args.install_figgenie_deps:
+                figgenie_result["dependency_install"] = install_figgenie_dependencies()
             result["figgenie"] = figgenie_result
     except (OSError, subprocess.CalledProcessError) as exc:
         parser.error(str(exc))

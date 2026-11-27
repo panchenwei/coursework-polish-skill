@@ -26,7 +26,7 @@ https://github.com/Sleepy-Avacado/FigGenie-paper-diagram-skill.git
 用户下载本仓库后只运行一次：
 
 ```text
-python scripts/install_skill.py
+python scripts/install_skill.py --install-figgenie-deps
 ```
 
 安装器：
@@ -37,6 +37,8 @@ python scripts/install_skill.py
 4. 仓库含 `vendor/figgenie-paper-diagram` 时优先离线部署；
 5. 否则从官方仓库获取并部署；
 6. 输出两个 Skill 的最终路径和安装状态。
+
+`--install-figgenie-deps` 还会安装必要 Python 包。Windows 上若检测到 Chrome/Edge，安装器将设置用户级 `FIGGENIE_CHROMIUM` 供 FigGenie 渲染器复用；没有系统浏览器时再提示安装 Playwright Chromium。
 
 可用 `--without-figgenie` 跳过，或用 `--offline` 禁止网络。覆盖本地 `assignment-polishing` 前自动备份旧版本。
 
