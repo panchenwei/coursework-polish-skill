@@ -1,0 +1,7 @@
+__pycache__/
+*.py[cod]
+*.tmp
+*.bak
+.assignment-polishing/
+FINAL_SUBMISSION/
+FINAL_SUBMISSION.audit.json

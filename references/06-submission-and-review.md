@@ -72,6 +72,53 @@
 
 先修P0/P1，不在截止前为P3进行高风险重构。
 
+每轮修改后必须重跑验证并从头重评完整 rubric。达到暂定满分后仍要进行全量 AI、引用、格式、跨制品和提交包审计；任何实质清理都触发再次重评分。完整状态机见 [09-full-score-iteration.md](09-full-score-iteration.md)。
+
+## 6.1 独立纯净提交目录
+
+最终正式提交物必须生成到独立目录，例如 `FINAL_SUBMISSION/`，实际名称服从任务书。不得把整个仓库、工作目录或通用输出目录直接交给用户。
+
+先建立白名单：
+
+| Required item | Required filename | Format | Source candidate | Included |
+|---|---|---|---|---|
+
+只有白名单中的文件和目录可以进入。任务书未要求时，默认排除：
+
+- requirements/evidence/traceability/scorecard/iteration等内部控制文件；
+- AI审计、提示词、聊天、过程日志和工具输出；
+- 草稿、历史版本、临时文件和缓存；
+- `.git`、IDE配置、`node_modules`、`__pycache__`和编译中间产物；
+- 未要求的README、截图、数据、图、脚本或依赖；
+- 账号、token、密钥、隐私数据和绝对本机路径；
+- `.DS_Store`、`Thumbs.db`、`__MACOSX`等系统残留。
+
+内部 `submission_manifest`、哈希和审计报告必须放在最终目录外，除非任务书明确要求提交。推荐：
+
+```text
+delivery-workspace/
+├── FINAL_SUBMISSION/        # 唯一交给用户/平台的内容
+├── submission-manifest.json # 内部白名单，禁止提交
+├── FINAL_SUBMISSION.audit.json
+└── audit-report.md
+```
+
+可用 `scripts/build_submission.py --root <project> --manifest <manifest.json>` 确定性构建目录。脚本默认拒绝覆盖现有输出、拒绝路径越界、拒绝重复目的路径，并在目录外写哈希审计；完成后用 `--audit-only` 复核精确成员集合。
+
+发现问题时回到工作区修复并重新构建；不要在最终目录中手工修改，避免工作区与提交物无法追踪。
+
+## 6.2 ZIP与最终目录干净验证
+
+若要求 ZIP：
+
+1. 只从纯净提交目录内容创建；
+2. 解压到新的临时目录；
+3. 比较成员、大小和 SHA-256；
+4. 只用解压副本编译、测试、运行和打开正式制品；
+5. 检查 ZIP 根目录层级符合平台要求。
+
+交付时向用户提供最终目录/ZIP路径、白名单摘要、已验证项和未验证项；用户拿到的正式目录中不能混入审计资料。
+
 ## 7. 上传后检查
 
 - 确认平台显示正确文件名和大小；

@@ -1,4 +1,4 @@
 interface:
-  display_name: "作业润色 skill"
-  short_description: "从代码、实验、证据、报告到提交的一体化课程作业润色流程"
-  default_prompt: "Use $assignment-polishing to audit and improve this coursework from requirements through code, evidence, report, presentation, and final submission."
+  display_name: "作业满分迭代与提交"
+  short_description: "按课程官方标准逐轮验证、评分、改进并交付纯净提交包"
+  default_prompt: "Use $assignment-polishing to set a goal, read the course files, extract the official highest-band rubric, iteratively improve and rescore the coursework, and deliver a verified clean submission folder."
